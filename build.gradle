@@ -1,2 +1,9 @@
 apply plugin: 'java'
 apply plugin: 'idea'
+
+group = 'com.python-bytecode-compiler'
+version = '0.0.1-SNAPSHOT'
+
+ext {
+    applicationName = 'python-bytecode-compiler'
+}
