@@ -1,0 +1,34 @@
+allprojects {
+    apply plugin: 'antlr'
+
+    dependencies {
+        antlr "org.antlr:antlr4:4.5"
+        compile group: 'org.antlr', name: 'antlr4', version: '4.5'
+        compile group: 'org.antlr', name: 'antlr4-runtime', version: '4.5'
+    }
+
+    generateGrammarSource {
+        maxHeapSize = "64m"
+        arguments += ['-package', 'com.pbc']
+        outputDirectory = new File("generated-src/antlr/main/com/pbc".toString())
+    }
+
+    compileJava.dependsOn generateGrammarSource
+
+    sourceSets {
+        generated {
+            java.srcDir 'generated-src/antlr/main/'
+        }
+    }
+    compileJava.source sourceSets.generated.java, sourceSets.main.java
+
+    clean {
+        delete "generated-src"
+    }
+
+    idea {
+        module {
+            sourceDirs += file("generated-src/antlr/main")
+        }
+    }
+}
