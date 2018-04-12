@@ -1,14 +1,15 @@
 apply plugin: 'antlr'
 
 dependencies {
-    compile group: 'org.antlr', name: 'antlr4', version: '4.7.1'
+    antlr "org.antlr:antlr4:4.5"
+    compile group: 'org.antlr', name: 'antlr4', version: '4.5'
     testCompile 'junit:junit:4.12'
 }
 
 generateGrammarSource {
     maxHeapSize = "64m"
     arguments += ['-package', 'com.pbc']
-    outputDirectory = new File("core/generated-src/antlr/main/com/pbc".toString())
+    outputDirectory = new File("generated-src/antlr/main/com/pbc".toString())
 }
 
 compileJava.dependsOn generateGrammarSource
