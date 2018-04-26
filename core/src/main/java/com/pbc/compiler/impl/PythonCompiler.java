@@ -2,28 +2,29 @@ package com.pbc.compiler.impl;
 
 import com.pbc.Python3Lexer;
 import com.pbc.Python3Parser;
+import com.pbc.compiler.ClassBuilder;
 import com.pbc.compiler.def.Compiler;
+import com.pbc.info.access.ClassAccessModifier;
+import com.pbc.info.java.JavaVersion;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class PythonCompiler implements Compiler {
 
     @Override
-    public List<String> compile(File file) {
-        try {
-            antlrDemo(file);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        List<String> output = new ArrayList<>();
-        output.add("Not implemented");
-        return output;
+    public String compile(File file) {
+
+        ClassBuilder classBuilder = ClassBuilder.builder()
+                .javaVersion(JavaVersion._8)
+                .name(file.getName().replace(".", "$"))
+                .superName("java/lang/Object")
+                .accessModifiers(ClassAccessModifier.ACC_PUBLIC, ClassAccessModifier.ACC_SUPER);
+
+        return classBuilder.build();
     }
 
     private void antlrDemo(File file) throws IOException {

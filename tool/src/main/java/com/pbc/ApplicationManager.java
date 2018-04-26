@@ -33,7 +33,7 @@ public class ApplicationManager {
         if (args.contains(INLINE_COMPILE_COMMAND_PARAMETER)) {
             List<File> files = reader.readSingleFromCommandLine();
             for (File file : files) {
-                List<String> compilationOutput = compiler.compile(file);
+                String compilationOutput = compiler.compile(file);
                 writer.write(file, compilationOutput);
             }
         }
