@@ -1,12 +1,13 @@
-package com.pbc.info;
+package com.pbc.compiler.info;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum CreationTag {
-    Class("07");
+public enum  EntryTag {
+
+    UTF8("01");
 
     private String code;
 }

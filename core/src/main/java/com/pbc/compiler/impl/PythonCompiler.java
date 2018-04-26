@@ -4,8 +4,8 @@ import com.pbc.Python3Lexer;
 import com.pbc.Python3Parser;
 import com.pbc.compiler.ClassBuilder;
 import com.pbc.compiler.def.Compiler;
-import com.pbc.info.access.ClassAccessModifier;
-import com.pbc.info.java.JavaVersion;
+import com.pbc.compiler.info.access.ClassAccessModifier;
+import com.pbc.compiler.info.java.JavaVersion;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 

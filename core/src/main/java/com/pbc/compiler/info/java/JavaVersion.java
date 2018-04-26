@@ -1,4 +1,4 @@
-package com.pbc.info.java;
+package com.pbc.compiler.info.java;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

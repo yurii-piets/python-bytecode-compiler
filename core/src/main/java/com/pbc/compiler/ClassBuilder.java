@@ -1,10 +1,10 @@
 package com.pbc.compiler;
 
-import com.pbc.info.Constant;
-import com.pbc.info.CreationTag;
-import com.pbc.info.EntryTag;
-import com.pbc.info.access.ClassAccessModifier;
-import com.pbc.info.java.JavaVersion;
+import com.pbc.compiler.info.Constant;
+import com.pbc.compiler.info.CreationTag;
+import com.pbc.compiler.info.EntryTag;
+import com.pbc.compiler.info.access.ClassAccessModifier;
+import com.pbc.compiler.info.java.JavaVersion;
 import com.pbc.util.HexUtil;
 import lombok.NoArgsConstructor;
 
@@ -61,11 +61,6 @@ public class ClassBuilder {
         return this;
     }
 
-    public ClassBuilder constant(Constant constant) {
-        constantPool.add(constant);
-        return this;
-    }
-
     public ClassBuilder accessModifiers(ClassAccessModifier... accessModifiers) {
         Collections.addAll(this.accessModifiers, accessModifiers);
         return this;
@@ -78,6 +73,11 @@ public class ClassBuilder {
 
     public ClassBuilder superName(String superName) {
         constant(new Constant(CreationTag.Class, EntryTag.UTF8, constantPool.size(), superName));
+        return this;
+    }
+
+    public ClassBuilder constant(Constant constant) {
+        constantPool.add(constant);
         return this;
     }
 

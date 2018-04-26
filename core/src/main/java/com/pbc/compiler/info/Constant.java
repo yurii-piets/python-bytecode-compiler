@@ -1,4 +1,4 @@
-package com.pbc.info;
+package com.pbc.compiler.info;
 
 import com.pbc.util.HexUtil;
 import lombok.AllArgsConstructor;

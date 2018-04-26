@@ -1,4 +1,4 @@
-package com.pbc.info.access;
+package com.pbc.compiler.info.access;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

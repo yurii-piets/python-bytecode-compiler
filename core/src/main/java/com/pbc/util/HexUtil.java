@@ -1,7 +1,7 @@
 package com.pbc.util;
 
-import com.pbc.info.access.ClassAccessModifier;
-import com.pbc.info.access.MethodAccessModifier;
+import com.pbc.compiler.info.access.ClassAccessModifier;
+import com.pbc.compiler.info.access.MethodAccessModifier;
 
 import java.util.Collection;
 
