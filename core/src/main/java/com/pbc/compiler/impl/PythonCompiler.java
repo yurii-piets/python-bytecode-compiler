@@ -2,8 +2,11 @@ package com.pbc.compiler.impl;
 
 import com.pbc.Python3Lexer;
 import com.pbc.Python3Parser;
-import com.pbc.compiler.ClassBuilder;
+import com.pbc.compiler.builder.ClassBuilder;
 import com.pbc.compiler.def.Compiler;
+import com.pbc.compiler.info.Constant;
+import com.pbc.compiler.info.CreationTag;
+import com.pbc.compiler.info.EntryTag;
 import com.pbc.compiler.info.access.ClassAccessModifier;
 import com.pbc.compiler.info.java.JavaVersion;
 import org.antlr.v4.runtime.ANTLRInputStream;
@@ -22,6 +25,10 @@ public class PythonCompiler implements Compiler {
                 .javaVersion(JavaVersion._8)
                 .name(file.getName().replace(".", "$"))
                 .superName("java/lang/Object")
+                .constant(new Constant(CreationTag.Class, EntryTag.UTF8, "java/lang/System"))
+                .constant(new Constant(CreationTag.Class, EntryTag.UTF8, "java/io/PrintStream"))
+                .constant(new Constant(CreationTag.String_Constant, EntryTag.UTF8, "Hello World"))
+//                .constant(new Constant(CreationTag.String_Constant, EntryTag.UTF8, fi))
                 .accessModifiers(ClassAccessModifier.ACC_PUBLIC, ClassAccessModifier.ACC_SUPER);
 
         return classBuilder.build();

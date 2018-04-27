@@ -1,4 +1,4 @@
-package com.pbc.compiler;
+package com.pbc.compiler.builder;
 
 import com.pbc.compiler.info.Constant;
 import com.pbc.compiler.info.CreationTag;
@@ -28,7 +28,7 @@ public class ClassBuilder {
 
     private String superName;
 
-    private List<String> interfaces = new ArrayList<>();
+    private Integer interfaces = 0;
 
     private List<String> fields = new ArrayList<>();
 
@@ -46,8 +46,9 @@ public class ClassBuilder {
                 .append(constantPool.stream().map(Constant::toCode).collect(Collectors.joining()))
                 .append(HexUtil.classAccessModifiers(accessModifiers))
 
-                .append("0001").append("0000")
-                .append("0000")
+                .append("0001") //class name
+                .append("0003") // super class name
+                .append(HexUtil.number(interfaces,4)) //interfaces number)
                 .append("0000")
                 .append("0000")
                 .append("0000");
@@ -67,12 +68,12 @@ public class ClassBuilder {
     }
 
     public ClassBuilder name(String name) {
-        constant(new Constant(CreationTag.Class, EntryTag.UTF8, constantPool.size(), name));
+        constant(new Constant(CreationTag.Class, EntryTag.UTF8, name));
         return this;
     }
 
     public ClassBuilder superName(String superName) {
-        constant(new Constant(CreationTag.Class, EntryTag.UTF8, constantPool.size(), superName));
+        constant(new Constant(CreationTag.Class, EntryTag.UTF8, superName));
         return this;
     }
 
@@ -82,7 +83,8 @@ public class ClassBuilder {
     }
 
     public ClassBuilder intefaze(String intefaze) {
-        interfaces.add(intefaze);
+        constant(new Constant(CreationTag.Class, EntryTag.UTF8, intefaze));
+        interfaces++;
         return this;
     }
 
