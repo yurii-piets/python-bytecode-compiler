@@ -1,8 +1,8 @@
 package com.pbc.writer.impl;
 
+import com.pbc.util.HexUtil;
 import com.pbc.writer.def.Writer;
 
-import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,16 +23,12 @@ public class FileWriter implements Writer {
             throw new IOException();
         }
 
-        Files.write(outputFile.toPath(), hexStringToByteArray(output));
+        Files.write(outputFile.toPath(), HexUtil.hexStringToByteArray(output));
     }
 
     private String createOutputFileName(File inputFile) {
         String relativePath = inputFile.getPath();
         return relativePath.replace(".", "$")
                 .concat(".class");
-    }
-
-    public static byte[] hexStringToByteArray(String s) {
-        return DatatypeConverter.parseHexBinary(s);
     }
 }

@@ -3,6 +3,7 @@ package com.pbc.util;
 import com.pbc.compiler.info.access.ClassAccessModifier;
 import com.pbc.compiler.info.access.MethodAccessModifier;
 
+import javax.xml.bind.DatatypeConverter;
 import java.util.Collection;
 
 public class HexUtil {
@@ -42,5 +43,9 @@ public class HexUtil {
             sum += methodAccessModifier.getCode();
         }
         return Integer.toHexString(sum);
+    }
+
+    public static byte[] hexStringToByteArray(String s) {
+        return DatatypeConverter.parseHexBinary(s);
     }
 }
