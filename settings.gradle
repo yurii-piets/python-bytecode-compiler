@@ -1,3 +1,2 @@
-include ':tool'
-include ':examples'
-include ':core'
+rootProject.name = 'python-java-translator'
+
