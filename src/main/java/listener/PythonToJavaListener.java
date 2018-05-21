@@ -12,13 +12,13 @@ import java.util.Set;
 public class PythonToJavaListener extends Python3BaseListener {
 
     private Map<String,String> variablesTypes;
-    private int variablesCounter;
+    private String varType;
     private Set<String> funNames;
 
 
     public PythonToJavaListener() {
         variablesTypes = new HashMap<>();
-        variablesCounter = 0;
+      //  variablesCounter = 0;
         funNames = new HashSet<>();
         funNames.add("print");
         funNames.add("range");
@@ -26,12 +26,16 @@ public class PythonToJavaListener extends Python3BaseListener {
 
     private String checkVariableValueType(String variableValue) {
         if(variableValue.contains("\"")) {
+            varType = "_s";
             return "String";
+
         }
         else if(variableValue.contains(".")) {
+            varType = "_d";
             return "double";
         }
         else {
+            varType = "_i";
             return "int";
         }
     }
@@ -40,28 +44,29 @@ public class PythonToJavaListener extends Python3BaseListener {
 
     @Override public void enterExpr_stmt(Python3Parser.Expr_stmtContext ctx) {
 
-        String variableName = ctx.start.getText();
+
         String variableType = checkVariableValueType(ctx.children.get(ctx.children.size()-1).getText());
-        if(!funNames.contains(variableName)){
+        String variableName = ctx.start.getText() + varType;
+        if(!funNames.contains(ctx.start.getText())){
             if(!variablesTypes.containsKey(variableName)){
                 System.out.print(variableType+ " ");
                 variablesTypes.put(variableName,variableType);
             }
-            else {
-//            if(!variablesTypes.get(variableName).equals(variableType)) {
-                int counter = 1;
-                String tmp = variableName + counter;
-                while(variablesTypes.containsKey(tmp)){
-                    counter++;
-                    tmp = variableName + counter;
-                }
-                System.out.print(variableType + " ");
-                variablesTypes.put(tmp,variableType);
-                // variablesCounter = counter;
-                variablesCounter = counter;
-                //variablesCounter.put(variableName,counter);
+//            else {
+////            if(!variablesTypes.get(variableName).equals(variableType)) {
+//                int counter = 1;
+//                String tmp = variableName + counter;
+//                while(variablesTypes.containsKey(tmp)){
+//                    counter++;
+//                    tmp = variableName + counter;
+//                }
+//                System.out.print(variableType + " ");
+//                variablesTypes.put(tmp,variableType);
+//                // variablesCounter = counter;
+//                variablesCounter = counter;
+//                //variablesCounter.put(variableName,counter);
+////            }
 //            }
-            }
         }
     }
 
@@ -77,9 +82,9 @@ public class PythonToJavaListener extends Python3BaseListener {
 
     @Override public void enterAtom_expr(Python3Parser.Atom_exprContext ctx) {
         if(ctx.start.getText().equals("print")) System.out.print("System.out.println(");
-        else if(variablesTypes.containsKey(ctx.start.getText())) {
-            System.out.print(ctx.start.getText()+variablesCounter);
-            variablesCounter = 0;
+        else if(variablesTypes.containsKey(ctx.start.getText()+varType)) {
+            System.out.print(ctx.start.getText()+varType);
+            //variablesCounter = 0;
         }else {
             System.out.print(ctx.start.getText());
         }

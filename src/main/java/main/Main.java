@@ -16,7 +16,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 
-        ANTLRInputStream inputStream = new ANTLRInputStream(new FileInputStream("src\\main\\resources\\examples\\while_loop.py"));
+        ANTLRInputStream inputStream = new ANTLRInputStream(new FileInputStream("src\\main\\resources\\examples\\test.py"));
         Python3Lexer pythonLexer = new Python3Lexer(inputStream);
         CommonTokenStream commonTokenStream = new CommonTokenStream(pythonLexer);
         Python3Parser pythonParser = new Python3Parser(commonTokenStream);
