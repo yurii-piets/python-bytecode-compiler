@@ -8,20 +8,28 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
+import javax.tools.JavaCompiler;
+import javax.tools.ToolProvider;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.stream.Collectors;
 
 public class PythonCompiler implements Compiler {
 
     @Override
-    public String compile(File file) throws IOException {
+    public void compile(File file) throws IOException {
         String collect = Files.readAllLines(file.toPath()).stream().collect(Collectors.joining());
-        return compile(collect, file.getName().replace(".", "$"));
+        compile(collect, file.getName().replace(".", "$"));
     }
 
-    private String compile(String s, String fileName) {
+    private void compile(String s, String fileName) {
+        String javaCode = compileToJava(s, fileName);
+        compileToByteCode(javaCode, fileName);
+    }
+
+    private String compileToJava(String s, String fileName) {
         ANTLRInputStream inputStream = new ANTLRInputStream(s);
         Python3Lexer pythonLexer = new Python3Lexer(inputStream);
         CommonTokenStream commonTokenStream = new CommonTokenStream(pythonLexer);
@@ -29,6 +37,24 @@ public class PythonCompiler implements Compiler {
         StringBuilder builder = new StringBuilder();
         ParseTreeWalker.DEFAULT.walk(new PythonToJavaBuilderListener(builder), pythonParser.file_input());
         return wrapWithMain(builder.toString(), fileName);
+    }
+
+    private void compileToByteCode(String javaCode, String fileName) {
+        JavaCompiler javaCompiler = ToolProvider.getSystemJavaCompiler();
+        try {
+            File file = new File(fileName + ".java");
+            if (!file.exists()) {
+                file.createNewFile();
+                if (!file.canWrite()) {
+                    file.setWritable(true);
+                }
+            }
+            Path sourceFile = file.toPath();
+            Files.write(sourceFile, javaCode.getBytes());
+            javaCompiler.run(null, null, null, sourceFile.toFile().getAbsolutePath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private String wrapWithMain(String s, String className) {

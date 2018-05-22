@@ -5,5 +5,5 @@ import java.io.IOException;
 
 public interface Compiler {
 
-    String compile(File file) throws IOException;
+    void compile(File file) throws IOException;
 }
