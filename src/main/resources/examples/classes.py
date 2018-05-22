@@ -1,3 +1,9 @@
+d1 = Dog("Scruffy", 5);
+
+print(d1)
+print(Dog.random())
+
+
 class Dog:
 
     def __init__(self, name, age):
@@ -18,10 +24,3 @@ class Dog:
 
     def __str__(self):
         return "Dog:\nName " + self._name + "\nAge: " + str(self._age)
-
-
-
-d1 = Dog("Scruffy", 5);
-
-print(d1)
-print(Dog.random())

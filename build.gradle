@@ -1,23 +1,15 @@
-allprojects {
-    apply plugin: 'java'
-    apply plugin: 'idea'
+version '1.0'
 
-    group = 'com.python-bytecode-compiler'
-    version = '0.1.0-SNAPSHOT'
+apply plugin: 'java'
+apply plugin: 'idea'
 
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
+sourceCompatibility = 1.8
 
-    repositories {
-        mavenCentral()
-    }
+repositories {
+    mavenCentral()
+}
 
-
-    ext {
-        applicationName = 'python-bytecode-compiler'
-    }
-
-    dependencies {
-        compile 'org.projectlombok:lombok:1.16.20'
-    }
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compile group: 'org.antlr', name: 'antlr4', version: '4.7.1'
 }
