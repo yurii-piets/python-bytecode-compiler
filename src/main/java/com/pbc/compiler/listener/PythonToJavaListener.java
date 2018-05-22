@@ -1,7 +1,7 @@
-package listener;
+package com.pbc.compiler.listener;
 
-import gen.Python3BaseListener;
-import gen.Python3Parser;
+import com.pbc.compiler.gen.Python3BaseListener;
+import com.pbc.compiler.gen.Python3Parser;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.HashMap;

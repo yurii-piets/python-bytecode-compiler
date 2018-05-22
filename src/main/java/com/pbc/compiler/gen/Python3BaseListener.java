@@ -1,4 +1,4 @@
-package gen;// Generated from E:/Users/adamb/IdeaProjects/Python-to-Java-Translator/src/main/resources\Python3.g4 by ANTLR 4.7
+package com.pbc.compiler.gen;// Generated from E:/Users/adamb/IdeaProjects/Python-to-Java-Translator/src/main/resources\Python3.g4 by ANTLR 4.7
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;

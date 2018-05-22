@@ -1,4 +1,4 @@
-package gen;// Generated from E:/Users/adamb/IdeaProjects/Python-to-Java-Translator/src/main/resources\Python3.g4 by ANTLR 4.7
+package com.pbc.compiler.gen;// Generated from E:/Users/adamb/IdeaProjects/Python-to-Java-Translator/src/main/resources\Python3.g4 by ANTLR 4.7
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;
@@ -161,7 +161,7 @@ public class Python3Lexer extends Lexer {
 	      }
 
 	      // Put the EOF back on the token stream.
-	      this.emit(commonToken(Python3Parser.EOF, "<EOF>"));
+	      this.emit(commonToken(EOF, "<EOF>"));
 	    }
 
 	    Token next = super.nextToken();

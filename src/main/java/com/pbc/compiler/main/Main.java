@@ -1,10 +1,8 @@
-package main;
+package com.pbc.compiler.main;
 
-
-import gen.Python3Lexer;
-import gen.Python3Parser;
-import listener.PythonToJavaListener;
-import org.antlr.v4.gui.Trees;
+import com.pbc.compiler.gen.Python3Lexer;
+import com.pbc.compiler.gen.Python3Parser;
+import com.pbc.compiler.listener.PythonToJavaListener;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
