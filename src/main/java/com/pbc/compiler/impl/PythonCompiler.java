@@ -17,17 +17,25 @@ public class PythonCompiler implements Compiler {
 
     @Override
     public String compile(File file) throws IOException {
-        return compile(Files.readAllLines(file.toPath()).stream().collect(Collectors.joining()));
+        String collect = Files.readAllLines(file.toPath()).stream().collect(Collectors.joining());
+        return compile(collect, file.getName().replace(".", "$"));
     }
 
-    @Override
-    public String compile(String s) {
+    private String compile(String s, String fileName) {
         ANTLRInputStream inputStream = new ANTLRInputStream(s);
         Python3Lexer pythonLexer = new Python3Lexer(inputStream);
         CommonTokenStream commonTokenStream = new CommonTokenStream(pythonLexer);
         Python3Parser pythonParser = new Python3Parser(commonTokenStream);
         StringBuilder builder = new StringBuilder();
         ParseTreeWalker.DEFAULT.walk(new PythonToJavaBuilderListener(builder), pythonParser.file_input());
-        return builder.toString();
+        return wrapWithMain(builder.toString(), fileName);
+    }
+
+    private String wrapWithMain(String s, String className) {
+        return "public class " + className + " {\n"
+                + "\tpublic static void main(String... args){\n"
+                + "\t\t" + s.replace(";\n", ";\n\t\t")
+                + "}\n"
+                + "}";
     }
 }
