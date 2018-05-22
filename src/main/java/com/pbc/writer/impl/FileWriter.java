@@ -1,6 +1,5 @@
 package com.pbc.writer.impl;
 
-import com.pbc.utils.HexUtil;
 import com.pbc.writer.def.Writer;
 
 import java.io.File;
@@ -23,7 +22,7 @@ public class FileWriter implements Writer {
             throw new IOException();
         }
 
-        Files.write(outputFile.toPath(), HexUtil.hexStringToByteArray(output));
+        Files.write(outputFile.toPath(), output.getBytes());
     }
 
     private String createOutputFileName(File inputFile) {
