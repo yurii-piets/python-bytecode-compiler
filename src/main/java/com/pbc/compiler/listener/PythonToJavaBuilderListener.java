@@ -17,7 +17,7 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
     private final Stack<StatementContext> statementContextStack = new Stack<>();
 
     @Override
-    public void enterStmt(Python3Parser.StmtContext ctx) {
+    public void enterExpr_stmt(Python3Parser.Expr_stmtContext ctx) {
         String nodeText = ctx.getText();
         StatementContext statementContext = StatementContext.defineStatementContext(nodeText);
         switch (statementContext) {
@@ -33,37 +33,35 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
     }
 
     @Override
-    public void exitStmt(Python3Parser.StmtContext ctx) {
-        builder.append(";\n");
-    }
-
-    @Override
     public void visitTerminal(TerminalNode node) {
-        if (node.getSymbol().getText().equals("=")) {
+        String nodeText = node.getSymbol().getText();
+        if (nodeText.equals("=")) {
             builder.append("=");
+        } else {
+            if(statementContextStack.size() > 0) {
+                switch (statementContextStack.peek()) {
+                    case VARIABLE_INIT:
+                        if (nodeText.matches("([0-9])|([0-9]*\\.[0-9]*)|(\".*\")")) {
+                            builder.append(nodeText);
+                            statementContextStack.pop();
+                        } else if (nodeText.matches("'.*'")) {
+                            builder.append(nodeText.replaceAll("'", "\""));
+                            statementContextStack.pop();
+                        }
+                        break;
+                }
+            }
         }
-    }
-
-    @Override
-    public void enterSimple_stmt(Python3Parser.Simple_stmtContext ctx) {
-        super.enterSimple_stmt(ctx);
-    }
-
-    @Override
-    public void enterSmall_stmt(Python3Parser.Small_stmtContext ctx) {
-        super.enterSmall_stmt(ctx);
-    }
-
-    @Override
-    public void enterExpr_stmt(Python3Parser.Expr_stmtContext ctx) {
-        super.enterExpr_stmt(ctx);
     }
 
     @Override
     public void exitExpr_stmt(Python3Parser.Expr_stmtContext ctx) {
-        switch (statementContextStack.pop()) {
-            case FUNCTION_CALL:
-                builder.append(")");
+        if (statementContextStack.size() > 0) {
+            switch (statementContextStack.pop()) {
+                case FUNCTION_CALL:
+                    builder.append(")");
+            }
         }
+        builder.append(";\n");
     }
 }
