@@ -18,6 +18,11 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
 
     @Override
     public void enterExpr_stmt(Python3Parser.Expr_stmtContext ctx) {
+
+    }
+
+    @Override
+    public void enterAtom_expr(Python3Parser.Atom_exprContext ctx) {
         String nodeText = ctx.getText();
         StatementContext statementContext = StatementContext.defineStatementContext(nodeText);
         switch (statementContext) {
@@ -28,8 +33,16 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
             case VARIABLE_INIT:
                 builder.append("Object ").append(ctx.start.getText());
                 break;
+            case PRIMITIVE_DECLARATION:
+                builder.append(ctx.start.getText());
+                break;
+            case CHARACTER_DECLARATION:
+                builder.append(ctx.start.getText().replaceAll("'", "\""));
+                break;
         }
-        statementContextStack.push(statementContext);
+        if (statementContext != StatementContext.UNKNOWN) {
+            statementContextStack.push(statementContext);
+        }
     }
 
     @Override
@@ -37,18 +50,12 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
         String nodeText = node.getSymbol().getText();
         if (nodeText.equals("=")) {
             builder.append("=");
-        } else {
-            if(statementContextStack.size() > 0) {
-                switch (statementContextStack.peek()) {
-                    case VARIABLE_INIT:
-                        if (nodeText.matches("([0-9])|([0-9]*\\.[0-9]*)|(\".*\")")) {
-                            builder.append(nodeText);
-                            statementContextStack.pop();
-                        } else if (nodeText.matches("'.*'")) {
-                            builder.append(nodeText.replaceAll("'", "\""));
-                            statementContextStack.pop();
-                        }
-                        break;
+        } else if (nodeText.equals(",") || nodeText.equals("+")) {
+            if (statementContextStack.size() > 0) {
+                switch (statementContextStack.pop()) {
+                    case CHARACTER_DECLARATION:
+                    case PRIMITIVE_DECLARATION:
+                        builder.append(" + ");
                 }
             }
         }
@@ -57,6 +64,10 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
     @Override
     public void exitExpr_stmt(Python3Parser.Expr_stmtContext ctx) {
         if (statementContextStack.size() > 0) {
+            while (statementContextStack.peek() == StatementContext.CHARACTER_DECLARATION
+                    || statementContextStack.peek() == StatementContext.PRIMITIVE_DECLARATION) {
+                statementContextStack.pop();
+            }
             switch (statementContextStack.pop()) {
                 case FUNCTION_CALL:
                     builder.append(")");
