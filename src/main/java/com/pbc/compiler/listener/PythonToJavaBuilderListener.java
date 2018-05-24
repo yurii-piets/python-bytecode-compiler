@@ -50,7 +50,7 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
         String nodeText = node.getSymbol().getText();
         if (nodeText.equals("=")) {
             builder.append("=");
-        } else if (nodeText.equals(",") || nodeText.equals("+")) {
+        } else if (nodeText.equals("+")) {
             if (statementContextStack.size() > 0) {
                 switch (statementContextStack.pop()) {
                     case CHARACTER_DECLARATION:
