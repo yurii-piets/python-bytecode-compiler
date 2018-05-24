@@ -35,16 +35,15 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
     }
 
     private String checkVariableValueType(String variableValue) {
-        if (variableValue.contains("\"")) {
+        if (variableValue.contains("\"") || variableValue.contains("\'")) {
             varType = "_s";
-            return "String";
-
+            return "java.lang.String";
         } else if (variableValue.contains(".")) {
             varType = "_d";
-            return "double";
+            return "java.lang.Double";
         } else {
             varType = "_i";
-            return "int";
+            return "java.lang.Integer";
         }
     }
 
@@ -81,20 +80,32 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
 
     @Override
     public void enterAtom_expr(Python3Parser.Atom_exprContext ctx) {
-        if (ctx.start.getText().contains("print")) {
+        String nodeText = ctx.start.getText();
+        if (nodeText.contains("print")) {
             String builderVarName = initializeClassVariable(StringBuilder.class);
             vatNamesStack.push(builderVarName);
-        } else if (variablesTypes.containsKey(ctx.start.getText() + varType)) {
-            builder.append(ctx.start.getText()).append(varType);
+        } else if (variablesTypes.containsKey(nodeText + varType)) {
+            if (vatNamesStack.size() > 0) {
+                builder.append(vatNamesStack.peek())
+                        .append(".append(")
+                        .append(nodeText).append(varType != null ? varType : "")
+                        .append(");")
+                        .append("\n");
+            } else {
+                builder.append(nodeText).append(varType);
+            }
         } else {
             if (vatNamesStack.size() > 0) {
                 builder.append(vatNamesStack.peek())
                         .append(".append(")
-                        .append(ctx.start.getText())
+                        .append(nodeText)
                         .append(");")
                         .append("\n");
             } else {
-                builder.append(ctx.start.getText());
+                if (nodeText.matches("'.*'")) {
+                    nodeText = nodeText.replace("'", "\"");
+                }
+                builder.append(nodeText);
             }
         }
     }
