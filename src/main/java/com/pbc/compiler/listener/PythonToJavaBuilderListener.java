@@ -2,6 +2,7 @@ package com.pbc.compiler.listener;
 
 import com.pbc.compiler.gen.Python3BaseListener;
 import com.pbc.compiler.gen.Python3Parser;
+import com.pbc.compiler.python.PythonOutput;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -19,20 +20,42 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
     @Override
     public void enterAtom_expr(Python3Parser.Atom_exprContext ctx) {
         String nodeText = ctx.getText();
-        builder.append(nodeText);
+        switch (ctx.start.getText()) {
+            case "print":
+            case "println":
+                builder.append(PythonOutput.class.getCanonicalName()).append(".").append(ctx.start.getText());
+                String[] split = nodeText.split(",");
+                if (split[split.length - 1].matches("end( )*=( )*\".*")) {
+                    builder.append("WithEnd");
+                } else if (split[split.length - 1].matches("sep( )*=( )*\".*")) {
+                    builder.append("WithSeparator");
+                }
+                builder.append("(");
+                break;
+            default:
+                builder.append(nodeText);
+        }
     }
 
     @Override
     public void visitTerminal(TerminalNode node) {
         String nodeText = node.getSymbol().getText();
-        if (nodeText.equals("=")) {
-            builder.append("=");
-        } else if (nodeText.equals("+")) {
-            builder.append(" + ");
-        } else if (node.getSymbol().getText().equals("else")) {
-            builder.append("else");
-        } else if (node.getSymbol().getText().equals("elif")) {
-            builder.append("else if");
+        switch (nodeText) {
+            case "=":
+                builder.append("=");
+                break;
+            case "+":
+                builder.append(" + ");
+                break;
+            case ",":
+                builder.append(", ");
+                break;
+            case "else":
+                builder.append("else");
+                break;
+            case "elif":
+                builder.append("else if");
+                break;
         }
     }
 
@@ -66,6 +89,13 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
     }
 
     @Override
+    public void exitAtom_expr(Python3Parser.Atom_exprContext ctx) {
+        if (ctx.start.getText().contains("print")) {
+            builder.append(")");
+        }
+    }
+
+    @Override
     public void enterSuite(Python3Parser.SuiteContext ctx) {
         builder.append("{");
     }
@@ -73,5 +103,10 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
     @Override
     public void exitSuite(Python3Parser.SuiteContext ctx) {
         builder.append("}");
+    }
+
+    @Override
+    public void enterAugassign(Python3Parser.AugassignContext ctx) {
+        builder.append(ctx.getText());
     }
 }
