@@ -16,14 +16,14 @@ public class ConsoleReader implements Reader {
     private final List<String> args;
 
     public List<File> readSingleFromCommandLine() {
-        List<String> fileNames = readFileNames(args);
+        List<String> fileNames = readFileNames();
         return fileNames.stream()
                 .map(File::new)
                 .filter(File::exists)
                 .collect(Collectors.toList());
     }
 
-    private List<String> readFileNames(List<String> args) {
+    private List<String> readFileNames() {
         int indexOf = args.indexOf(INLINE_COMPILE_COMMAND_PARAMETER);
         List<String> filesNames = new LinkedList<>();
         for (int i = indexOf + 1; i < args.size(); ++i) {

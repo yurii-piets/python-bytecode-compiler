@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public class PythonCompiler implements Compiler {
@@ -59,9 +60,9 @@ public class PythonCompiler implements Compiler {
 
     private String wrapWithMain(String s, String className) {
         return "public class " + className + " {\n"
-                + "\tpublic static void main(String... args){\n"
-                + "\t\t" + s.replace(";\n", ";\n\t\t")
-                + "}\n"
+                + "\tpublic static void main(String[] args){\n"
+                + "\t\t" + Arrays.stream(s.split(";\n")).collect(Collectors.joining( ";\n\t\t"))
+                + ";\n\t}\n"
                 + "}";
     }
 }

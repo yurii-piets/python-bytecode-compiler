@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 public class PythonToJavaBuilderListener extends Python3BaseListener {
 
@@ -18,6 +19,10 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
     private Set<String> funNames;
 
     private StringBuilder builder;
+
+    private int variableCounter = 0;
+
+    private Stack<String> vatNamesStack = new Stack<>();
 
 
     public PythonToJavaBuilderListener(StringBuilder builder) {
@@ -46,30 +51,15 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
 
     @Override
     public void enterExpr_stmt(Python3Parser.Expr_stmtContext ctx) {
-
-
-        String variableType = checkVariableValueType(ctx.children.get(ctx.children.size() - 1).getText());
-        String variableName = ctx.start.getText() + varType;
-        if (!funNames.contains(ctx.start.getText())) {
-            if (!variablesTypes.containsKey(variableName)) {
-                builder.append(variableType + " ");
-                variablesTypes.put(variableName, variableType);
+        if (!ctx.getText().contains("print")) {
+            String variableType = checkVariableValueType(ctx.children.get(ctx.children.size() - 1).getText());
+            String variableName = ctx.start.getText() + varType;
+            if (!funNames.contains(ctx.start.getText())) {
+                if (!variablesTypes.containsKey(variableName)) {
+                    builder.append(variableType + " ");
+                    variablesTypes.put(variableName, variableType);
+                }
             }
-//            else {
-////            if(!variablesTypes.get(variableName).equals(variableType)) {
-//                int counter = 1;
-//                String tmp = variableName + counter;
-//                while(variablesTypes.containsKey(tmp)){
-//                    counter++;
-//                    tmp = variableName + counter;
-//                }
-//                builder.append(variableType + " ");
-//                variablesTypes.put(tmp,variableType);
-//                // variablesCounter = counter;
-//                variablesCounter = counter;
-//                //variablesCounter.put(variableName,counter);
-////            }
-//            }
         }
     }
 
@@ -80,26 +70,54 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
 
     @Override
     public void visitTerminal(TerminalNode node) {
-        if (node.getSymbol().getText().equals("=") || node.getSymbol().getText().equals("else"))
-            builder.append(node.getSymbol().getText());
-        if (node.getSymbol().getText().equals("elif")) builder.append("else if");
-
-    }
-
-    @Override
-    public void enterAtom_expr(Python3Parser.Atom_exprContext ctx) {
-        if (ctx.start.getText().equals("print")) builder.append("System.out.println(");
-        else if (variablesTypes.containsKey(ctx.start.getText() + varType)) {
-            builder.append(ctx.start.getText() + varType);
-            //variablesCounter = 0;
-        } else {
-            builder.append(ctx.start.getText());
+        String nodeText = node.getSymbol().getText();
+        if (nodeText.equals("=") || nodeText.equals("else")) {
+            builder.append(nodeText);
+        }
+        if (nodeText.equals("elif")) {
+            builder.append("else if");
         }
     }
 
     @Override
+    public void enterAtom_expr(Python3Parser.Atom_exprContext ctx) {
+        if (ctx.start.getText().contains("print")) {
+            String builderVarName = initializeClassVariable(StringBuilder.class);
+            vatNamesStack.push(builderVarName);
+        } else if (variablesTypes.containsKey(ctx.start.getText() + varType)) {
+            builder.append(ctx.start.getText()).append(varType);
+        } else {
+            if (vatNamesStack.size() > 0) {
+                builder.append(vatNamesStack.peek())
+                        .append(".append(")
+                        .append(ctx.start.getText())
+                        .append(");")
+                        .append("\n");
+            } else {
+                builder.append(ctx.start.getText());
+            }
+        }
+    }
+
+    private String initializeClassVariable(Class clazz) {
+        String varName = "var" + getVariableCounter();
+        builder.append(clazz.getCanonicalName()).append(" ").append(varName)
+                .append(" = new ").append(clazz.getCanonicalName()).append("()")
+                .append(";\n");
+        return varName;
+    }
+
+    @Override
     public void exitAtom_expr(Python3Parser.Atom_exprContext ctx) {
-        if (ctx.start.getText().equals("print")) builder.append(")");
+        if (ctx.start.getText().contains("print")) {
+            if (ctx.start.getText().equals("print")) {
+                builder.append("System.out.print(");
+            } else if (ctx.start.getText().equals("println")) {
+                builder.append("System.out.println(");
+            }
+            builder.append(vatNamesStack.pop()).append(".toString()")
+                    .append(")");
+        }
     }
 
 
@@ -120,14 +138,16 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
 
     @Override
     public void enterComparison(Python3Parser.ComparisonContext ctx) {
-
-        if (ctx.children.size() > 1) builder.append("(");
+        if (ctx.children.size() > 1) {
+            builder.append("(");
+        }
     }
-
 
     @Override
     public void exitComparison(Python3Parser.ComparisonContext ctx) {
-        if (ctx.children.size() > 1) builder.append(")");
+        if (ctx.children.size() > 1) {
+            builder.append(")");
+        }
     }
 
     @Override
@@ -148,5 +168,9 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
     @Override
     public void enterAugassign(Python3Parser.AugassignContext ctx) {
         builder.append(ctx.start.getText());
+    }
+
+    private int getVariableCounter() {
+        return variableCounter++;
     }
 }

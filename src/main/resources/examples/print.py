@@ -1,8 +1,6 @@
+
+
 print("Hello", "World")
+println("World2")
 
-print("Hello", end = " ")
-print("World")
-
-print("Hello" + "World")
-
-print("Hello", "World", sep = "")
+println("Hello3" + "World4")
