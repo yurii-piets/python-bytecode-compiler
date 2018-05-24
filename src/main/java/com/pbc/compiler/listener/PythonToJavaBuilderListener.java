@@ -5,8 +5,6 @@ import com.pbc.compiler.gen.Python3Parser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import java.util.Stack;
-
 @RequiredArgsConstructor
 public class PythonToJavaBuilderListener extends Python3BaseListener {
 
@@ -14,35 +12,14 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
 
     private final FunctionMapper functionMapper = new FunctionMapper();
 
-    private final Stack<StatementContext> statementContextStack = new Stack<>();
-
     @Override
     public void enterExpr_stmt(Python3Parser.Expr_stmtContext ctx) {
-
     }
 
     @Override
     public void enterAtom_expr(Python3Parser.Atom_exprContext ctx) {
         String nodeText = ctx.getText();
-        StatementContext statementContext = StatementContext.defineStatementContext(nodeText);
-        switch (statementContext) {
-            case FUNCTION_CALL:
-                builder.append(functionMapper.get(ctx.start.getText()))
-                        .append("(");
-                break;
-            case VARIABLE_INIT:
-                builder.append("Object ").append(ctx.start.getText());
-                break;
-            case PRIMITIVE_DECLARATION:
-                builder.append(ctx.start.getText());
-                break;
-            case CHARACTER_DECLARATION:
-                builder.append(ctx.start.getText().replaceAll("'", "\""));
-                break;
-        }
-        if (statementContext != StatementContext.UNKNOWN) {
-            statementContextStack.push(statementContext);
-        }
+        builder.append(nodeText);
     }
 
     @Override
@@ -51,28 +28,50 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
         if (nodeText.equals("=")) {
             builder.append("=");
         } else if (nodeText.equals("+")) {
-            if (statementContextStack.size() > 0) {
-                switch (statementContextStack.pop()) {
-                    case CHARACTER_DECLARATION:
-                    case PRIMITIVE_DECLARATION:
-                        builder.append(" + ");
-                }
-            }
+            builder.append(" + ");
+        } else if (node.getSymbol().getText().equals("else")) {
+            builder.append("else");
+        } else if (node.getSymbol().getText().equals("elif")) {
+            builder.append("else if");
         }
     }
 
     @Override
     public void exitExpr_stmt(Python3Parser.Expr_stmtContext ctx) {
-        if (statementContextStack.size() > 0) {
-            while (statementContextStack.peek() == StatementContext.CHARACTER_DECLARATION
-                    || statementContextStack.peek() == StatementContext.PRIMITIVE_DECLARATION) {
-                statementContextStack.pop();
-            }
-            switch (statementContextStack.pop()) {
-                case FUNCTION_CALL:
-                    builder.append(")");
-            }
-        }
         builder.append(";\n");
+    }
+
+    @Override
+    public void enterIf_stmt(Python3Parser.If_stmtContext ctx) {
+        builder.append("if");
+    }
+
+    @Override
+    public void enterComp_op(Python3Parser.Comp_opContext ctx) {
+        builder.append(ctx.start.getText());
+    }
+
+    @Override
+    public void enterComparison(Python3Parser.ComparisonContext ctx) {
+        if (ctx.children.size() > 1) {
+            builder.append("(");
+        }
+    }
+
+    @Override
+    public void exitComparison(Python3Parser.ComparisonContext ctx) {
+        if (ctx.children.size() > 1) {
+            builder.append(")");
+        }
+    }
+
+    @Override
+    public void enterSuite(Python3Parser.SuiteContext ctx) {
+        builder.append("{");
+    }
+
+    @Override
+    public void exitSuite(Python3Parser.SuiteContext ctx) {
+        builder.append("}");
     }
 }
