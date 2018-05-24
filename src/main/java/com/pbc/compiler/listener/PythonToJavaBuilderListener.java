@@ -47,10 +47,10 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
                 StatementContext statementContext = StatementContext.defineStatementContext(nodeText);
                 if (this.statementContext == null && statementContext == StatementContext.VARIABLE_DECLARATION) {
                     String varName = ctx.start.getText();
-                    this.statementContext = VARIABLE_DECLARATION;
                     if(!definedVariables.contains(varName)) {
                         builder.append("Object ");
                         definedVariables.add(varName);
+                        this.statementContext = VARIABLE_DECLARATION;
                     }
                     builder.append(varName);
                 } else if (this.statementContext == VARIABLE_DECLARATION) {
@@ -97,6 +97,11 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
     @Override
     public void enterIf_stmt(Python3Parser.If_stmtContext ctx) {
         builder.append("if");
+    }
+
+    @Override
+    public void enterWhile_stmt(Python3Parser.While_stmtContext ctx) {
+        builder.append("while");
     }
 
     @Override
