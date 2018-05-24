@@ -6,12 +6,23 @@ import com.pbc.compiler.python.PythonOutput;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import static com.pbc.compiler.listener.StatementContext.CHARACTER_DECLARATION;
+import static com.pbc.compiler.listener.StatementContext.PRIMITIVE_DECLARATION;
+import static com.pbc.compiler.listener.StatementContext.VARIABLE_DECLARATION;
+
 @RequiredArgsConstructor
 public class PythonToJavaBuilderListener extends Python3BaseListener {
 
     private final StringBuilder builder;
 
     private final FunctionMapper functionMapper = new FunctionMapper();
+
+    private final Set<String> definedVariables = new HashSet<>();
+
+    private StatementContext statementContext;
 
     @Override
     public void enterExpr_stmt(Python3Parser.Expr_stmtContext ctx) {
@@ -32,8 +43,24 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
                 }
                 builder.append("(");
                 break;
-            default:
-                builder.append(nodeText);
+            default: {
+                StatementContext statementContext = StatementContext.defineStatementContext(nodeText);
+                if (this.statementContext == null && statementContext == StatementContext.VARIABLE_DECLARATION) {
+                    String varName = ctx.start.getText();
+                    definedVariables.add(varName);
+                    this.statementContext = VARIABLE_DECLARATION;
+                    builder.append("Object ").append(varName);
+                } else if (this.statementContext == VARIABLE_DECLARATION) {
+                    if (statementContext == PRIMITIVE_DECLARATION) {
+                        builder.append(ctx.start.getText());
+                    } else if (statementContext == CHARACTER_DECLARATION) {
+                        builder.append(ctx.start.getText().replaceAll("'", "\""));
+                    }
+                    this.statementContext = null;
+                } else {
+                    builder.append(ctx.start.getText());
+                }
+            }
         }
     }
 
@@ -97,12 +124,12 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
 
     @Override
     public void enterSuite(Python3Parser.SuiteContext ctx) {
-        builder.append("{");
+        builder.append(" {\n");
     }
 
     @Override
     public void exitSuite(Python3Parser.SuiteContext ctx) {
-        builder.append("}");
+        builder.append("} ");
     }
 
     @Override
