@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import java.util.HashSet;
+import java.util.Scanner;
 import java.util.Set;
 
 import static com.pbc.compiler.listener.StatementContext.CHARACTER_DECLARATION;
@@ -49,6 +50,9 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
                 builder.append(functionMapper.get(startText))
                         .append("(");
                 break;
+            case "input":
+                builder.append("new " + Scanner.class.getCanonicalName() + "(System.in).nextLine()");
+                break;
             default: {
                 StatementContext statementContext = StatementContext.defineStatementContext(nodeText);
                 if (this.statementContext == null && statementContext == StatementContext.VARIABLE_DECLARATION) {
@@ -64,6 +68,8 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
                         builder.append(startText);
                     } else if (statementContext == CHARACTER_DECLARATION) {
                         builder.append(startText.replaceAll("'", "\""));
+                    } else if (definedVariables.contains(startText)) {
+                        builder.append(startText);
                     }
                     this.statementContext = null;
                 } else {
