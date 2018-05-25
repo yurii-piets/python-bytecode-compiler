@@ -31,10 +31,11 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
     @Override
     public void enterAtom_expr(Python3Parser.Atom_exprContext ctx) {
         String nodeText = ctx.getText();
-        switch (ctx.start.getText()) {
+        String startText = ctx.start.getText();
+        switch (startText) {
             case "print":
             case "println":
-                builder.append(PythonOutput.class.getCanonicalName()).append(".").append(ctx.start.getText());
+                builder.append(PythonOutput.class.getCanonicalName()).append(".").append(startText);
                 String[] split = nodeText.split(",");
                 if (split[split.length - 1].matches("end( )*=( )*\".*")) {
                     builder.append("WithEnd");
@@ -43,11 +44,16 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
                 }
                 builder.append("(");
                 break;
+            case "min":
+            case "max":
+                builder.append(functionMapper.get(startText))
+                        .append("(");
+                break;
             default: {
                 StatementContext statementContext = StatementContext.defineStatementContext(nodeText);
                 if (this.statementContext == null && statementContext == StatementContext.VARIABLE_DECLARATION) {
-                    String varName = ctx.start.getText();
-                    if(!definedVariables.contains(varName)) {
+                    String varName = startText;
+                    if (!definedVariables.contains(varName)) {
                         builder.append("Object ");
                         definedVariables.add(varName);
                         this.statementContext = VARIABLE_DECLARATION;
@@ -55,13 +61,13 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
                     builder.append(varName);
                 } else if (this.statementContext == VARIABLE_DECLARATION) {
                     if (statementContext == PRIMITIVE_DECLARATION) {
-                        builder.append(ctx.start.getText());
+                        builder.append(startText);
                     } else if (statementContext == CHARACTER_DECLARATION) {
-                        builder.append(ctx.start.getText().replaceAll("'", "\""));
+                        builder.append(startText.replaceAll("'", "\""));
                     }
                     this.statementContext = null;
                 } else {
-                    builder.append(ctx.start.getText());
+                    builder.append(startText);
                 }
             }
         }
@@ -72,10 +78,11 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
         String nodeText = node.getSymbol().getText();
         switch (nodeText) {
             case "=":
-                builder.append("=");
-                break;
             case "+":
-                builder.append(" + ");
+            case "-":
+            case "/":
+            case "%":
+                builder.append(nodeText);
                 break;
             case ",":
                 builder.append(", ");
@@ -125,7 +132,9 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
 
     @Override
     public void exitAtom_expr(Python3Parser.Atom_exprContext ctx) {
-        if (ctx.start.getText().contains("print")) {
+        if (ctx.start.getText().contains("print")
+                || ctx.start.getText().contains("min")
+                || ctx.start.getText().contains("max")) {
             builder.append(")");
         }
     }
