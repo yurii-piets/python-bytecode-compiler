@@ -1,8 +1,7 @@
 print("Hello", "World")
+println("World2")
 
-print("Hello", end = " ")
-print("World")
+println("Hello3" + "World4")
 
-print("Hello" + "World")
-
-print("Hello", "World", sep = "")
+#print("Hello1", end = " ")
+#print("Hello5", "World6", sep = "")

@@ -2,74 +2,103 @@ package com.pbc.compiler.listener;
 
 import com.pbc.compiler.gen.Python3BaseListener;
 import com.pbc.compiler.gen.Python3Parser;
+import com.pbc.compiler.python.PythonOutput;
+import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 
+import static com.pbc.compiler.listener.StatementContext.CHARACTER_DECLARATION;
+import static com.pbc.compiler.listener.StatementContext.PRIMITIVE_DECLARATION;
+import static com.pbc.compiler.listener.StatementContext.VARIABLE_DECLARATION;
+
+@RequiredArgsConstructor
 public class PythonToJavaBuilderListener extends Python3BaseListener {
 
-    private Map<String, String> variablesTypes;
+    private final StringBuilder builder;
 
-    private String varType;
+    private final FunctionMapper functionMapper = new FunctionMapper();
 
-    private Set<String> funNames;
+    private final Set<String> definedVariables = new HashSet<>();
 
-    private StringBuilder builder;
-
-
-    public PythonToJavaBuilderListener(StringBuilder builder) {
-        this.builder = builder;
-        variablesTypes = new HashMap<>();
-        //  variablesCounter = 0;
-        funNames = new HashSet<>();
-        funNames.add("print");
-        funNames.add("range");
-    }
-
-    private String checkVariableValueType(String variableValue) {
-        if (variableValue.contains("\"")) {
-            varType = "_s";
-            return "String";
-
-        } else if (variableValue.contains(".")) {
-            varType = "_d";
-            return "double";
-        } else {
-            varType = "_i";
-            return "int";
-        }
-    }
-
+    private StatementContext statementContext;
 
     @Override
     public void enterExpr_stmt(Python3Parser.Expr_stmtContext ctx) {
+    }
 
-
-        String variableType = checkVariableValueType(ctx.children.get(ctx.children.size() - 1).getText());
-        String variableName = ctx.start.getText() + varType;
-        if (!funNames.contains(ctx.start.getText())) {
-            if (!variablesTypes.containsKey(variableName)) {
-                builder.append(variableType + " ");
-                variablesTypes.put(variableName, variableType);
+    @Override
+    public void enterAtom_expr(Python3Parser.Atom_exprContext ctx) {
+        String nodeText = ctx.getText();
+        String startText = ctx.start.getText();
+        switch (startText) {
+            case "print":
+            case "println":
+                builder.append(PythonOutput.class.getCanonicalName()).append(".").append(startText);
+                String[] split = nodeText.split(",");
+                if (split[split.length - 1].matches("end( )*=( )*\".*")) {
+                    builder.append("WithEnd");
+                } else if (split[split.length - 1].matches("sep( )*=( )*\".*")) {
+                    builder.append("WithSeparator");
+                }
+                builder.append("(");
+                break;
+            case "min":
+            case "max":
+                builder.append(functionMapper.get(startText))
+                        .append("(");
+                break;
+            case "input":
+                builder.append("new " + Scanner.class.getCanonicalName() + "(System.in).nextLine()");
+                break;
+            default: {
+                StatementContext statementContext = StatementContext.defineStatementContext(nodeText);
+                if (this.statementContext == null && statementContext == StatementContext.VARIABLE_DECLARATION) {
+                    String varName = startText;
+                    if (!definedVariables.contains(varName)) {
+                        builder.append("Object ");
+                        definedVariables.add(varName);
+                        this.statementContext = VARIABLE_DECLARATION;
+                    }
+                    builder.append(varName);
+                } else if (this.statementContext == VARIABLE_DECLARATION) {
+                    if (statementContext == PRIMITIVE_DECLARATION) {
+                        builder.append(startText);
+                    } else if (statementContext == CHARACTER_DECLARATION) {
+                        builder.append(startText.replaceAll("'", "\""));
+                    } else if (definedVariables.contains(startText)) {
+                        builder.append(startText);
+                    }
+                    this.statementContext = null;
+                } else {
+                    builder.append(startText);
+                }
             }
-//            else {
-////            if(!variablesTypes.get(variableName).equals(variableType)) {
-//                int counter = 1;
-//                String tmp = variableName + counter;
-//                while(variablesTypes.containsKey(tmp)){
-//                    counter++;
-//                    tmp = variableName + counter;
-//                }
-//                builder.append(variableType + " ");
-//                variablesTypes.put(tmp,variableType);
-//                // variablesCounter = counter;
-//                variablesCounter = counter;
-//                //variablesCounter.put(variableName,counter);
-////            }
-//            }
+        }
+    }
+
+    @Override
+    public void visitTerminal(TerminalNode node) {
+        String nodeText = node.getSymbol().getText();
+        switch (nodeText) {
+            case "=":
+            case "+":
+            case "-":
+            case "/":
+            case "%":
+                builder.append(nodeText);
+                break;
+            case ",":
+                builder.append(", ");
+                break;
+            case "else":
+                builder.append("else");
+                break;
+            case "elif":
+                builder.append("else if");
+                break;
         }
     }
 
@@ -77,31 +106,6 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
     public void exitExpr_stmt(Python3Parser.Expr_stmtContext ctx) {
         builder.append(";\n");
     }
-
-    @Override
-    public void visitTerminal(TerminalNode node) {
-        if (node.getSymbol().getText().equals("=") || node.getSymbol().getText().equals("else"))
-            builder.append(node.getSymbol().getText());
-        if (node.getSymbol().getText().equals("elif")) builder.append("else if");
-
-    }
-
-    @Override
-    public void enterAtom_expr(Python3Parser.Atom_exprContext ctx) {
-        if (ctx.start.getText().equals("print")) builder.append("System.out.println(");
-        else if (variablesTypes.containsKey(ctx.start.getText() + varType)) {
-            builder.append(ctx.start.getText() + varType);
-            //variablesCounter = 0;
-        } else {
-            builder.append(ctx.start.getText());
-        }
-    }
-
-    @Override
-    public void exitAtom_expr(Python3Parser.Atom_exprContext ctx) {
-        if (ctx.start.getText().equals("print")) builder.append(")");
-    }
-
 
     @Override
     public void enterIf_stmt(Python3Parser.If_stmtContext ctx) {
@@ -114,39 +118,46 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
     }
 
     @Override
-    public void enterFor_stmt(Python3Parser.For_stmtContext ctx) {
-        builder.append("for(");
-    }
-
-    @Override
-    public void enterComparison(Python3Parser.ComparisonContext ctx) {
-
-        if (ctx.children.size() > 1) builder.append("(");
-    }
-
-
-    @Override
-    public void exitComparison(Python3Parser.ComparisonContext ctx) {
-        if (ctx.children.size() > 1) builder.append(")");
-    }
-
-    @Override
     public void enterComp_op(Python3Parser.Comp_opContext ctx) {
         builder.append(ctx.start.getText());
     }
 
     @Override
+    public void enterComparison(Python3Parser.ComparisonContext ctx) {
+        if (ctx.children.size() > 1) {
+            builder.append("(");
+        }
+    }
+
+    @Override
+    public void exitComparison(Python3Parser.ComparisonContext ctx) {
+        if (ctx.children.size() > 1) {
+            builder.append(")");
+        }
+    }
+
+    @Override
+    public void exitAtom_expr(Python3Parser.Atom_exprContext ctx) {
+        if (ctx.start.getText().contains("print")
+                || ctx.start.getText().contains("min")
+                || ctx.start.getText().contains("max")) {
+            builder.append(")");
+        }
+    }
+
+    @Override
     public void enterSuite(Python3Parser.SuiteContext ctx) {
-        builder.append("{");
+        builder.append(" {\n");
     }
 
     @Override
     public void exitSuite(Python3Parser.SuiteContext ctx) {
-        builder.append("}");
+        builder.append("} ");
+        definedVariables.clear();
     }
 
     @Override
     public void enterAugassign(Python3Parser.AugassignContext ctx) {
-        builder.append(ctx.start.getText());
+        builder.append(ctx.getText());
     }
 }

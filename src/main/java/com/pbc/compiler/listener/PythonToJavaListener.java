@@ -127,6 +127,7 @@ public class PythonToJavaListener extends Python3BaseListener {
     @Override public void exitSuite(Python3Parser.SuiteContext ctx) {
         System.out.println("}");
     }
+
     @Override public void enterAugassign(Python3Parser.AugassignContext ctx) {
         System.out.print(ctx.start.getText());
     }
