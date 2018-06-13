@@ -2,6 +2,7 @@ package com.pbc.compiler.listener;
 
 import com.pbc.compiler.gen.Python3BaseListener;
 import com.pbc.compiler.gen.Python3Parser;
+import com.pbc.compiler.python.PythonObject;
 import com.pbc.compiler.python.PythonOutput;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -11,6 +12,7 @@ import java.util.Scanner;
 import java.util.Set;
 
 import static com.pbc.compiler.listener.StatementContext.CHARACTER_DECLARATION;
+import static com.pbc.compiler.listener.StatementContext.FUNCTION_CALL;
 import static com.pbc.compiler.listener.StatementContext.PRIMITIVE_DECLARATION;
 import static com.pbc.compiler.listener.StatementContext.VARIABLE_DECLARATION;
 
@@ -24,10 +26,6 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
     private final Set<String> definedVariables = new HashSet<>();
 
     private StatementContext statementContext;
-
-    @Override
-    public void enterExpr_stmt(Python3Parser.Expr_stmtContext ctx) {
-    }
 
     @Override
     public void enterAtom_expr(Python3Parser.Atom_exprContext ctx) {
@@ -45,37 +43,34 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
                 }
                 builder.append("(");
                 break;
-            case "min":
-            case "max":
-                builder.append(functionMapper.get(startText))
-                        .append("(");
-                break;
             case "input":
-                builder.append("new " + Scanner.class.getCanonicalName() + "(System.in).nextLine()");
+                builder.append("new ").append(PythonObject.class.getCanonicalName()).append("(").append("new ").append(Scanner.class.getCanonicalName()).append("(System.in).nextLine()").append(")");
                 break;
             default: {
                 StatementContext statementContext = StatementContext.defineStatementContext(nodeText);
                 if (this.statementContext == null && statementContext == StatementContext.VARIABLE_DECLARATION) {
-                    String varName = startText;
-                    if (!definedVariables.contains(varName)) {
-                        builder.append("Object ");
-                        definedVariables.add(varName);
+                    if (!definedVariables.contains(startText)) {
+                        builder.append(PythonObject.class.getCanonicalName()).append(" ");
+                        definedVariables.add(startText);
                         this.statementContext = VARIABLE_DECLARATION;
                     }
-                    builder.append(varName);
+                    builder.append(startText);
                 } else if (this.statementContext == VARIABLE_DECLARATION) {
-                    if (statementContext == PRIMITIVE_DECLARATION) {
-                        builder.append(startText);
-                    } else if (statementContext == CHARACTER_DECLARATION) {
-                        builder.append(startText.replaceAll("'", "\""));
-                    } else if (definedVariables.contains(startText)) {
-                        builder.append(startText);
+                    if (statementContext == CHARACTER_DECLARATION) {
+                        String str = startText.replaceAll("'", "\"");
+                        builder.append("new ").append(PythonObject.class.getCanonicalName()).append("(").append(str).append(")");
+                    } else if (statementContext == PRIMITIVE_DECLARATION || definedVariables.contains(startText)) {
+                        builder.append("new ").append(PythonObject.class.getCanonicalName()).append("(").append(startText).append(")");
                     }
                     this.statementContext = null;
                 } else {
-                    builder.append(startText);
+                    builder.append("new ").append(PythonObject.class.getCanonicalName()).append("(").append(startText).append(")");
                 }
             }
+        }
+        if(statementContext == FUNCTION_CALL) {
+            builder.append(")");
+            statementContext = null;
         }
     }
 
@@ -84,11 +79,15 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
         String nodeText = node.getSymbol().getText();
         switch (nodeText) {
             case "=":
+                builder.append(" ").append(nodeText).append(" ");
+                break;
             case "+":
             case "-":
+            case "*":
             case "/":
             case "%":
-                builder.append(nodeText);
+                builder.append(".invokeOperator(").append("\"").append(nodeText).append("\"").append(",");
+                this.statementContext = FUNCTION_CALL;
                 break;
             case ",":
                 builder.append(", ");
