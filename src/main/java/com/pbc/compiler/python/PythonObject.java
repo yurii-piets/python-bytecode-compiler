@@ -35,7 +35,7 @@ public class PythonObject {
             }
             Method declaredMethod = object.getClass().getDeclaredMethod(methodName, classes);
             Object result = declaredMethod.invoke(object, Arrays.stream(pythonObjects)
-                    .map(PythonObject::getObject)
+                    .map(this::unbox)
                     .collect(Collectors.toList()));
             return new PythonObject(result);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
@@ -45,22 +45,36 @@ public class PythonObject {
     }
 
     public PythonObject invokeOperator(String operator, PythonObject other) {
-        if (object instanceof Double || other.object instanceof Double) {
-            Double var1 = ((Number) object).doubleValue();
-            Double var2 = ((Number) other.object).doubleValue();
+        Object thisUnboxed = unbox(this);
+        Object otherUnboxed = unbox(other);
+        if (thisUnboxed instanceof Double || other.object instanceof Double) {
+            Double var1 = ((Number) thisUnboxed).doubleValue();
+            Double var2 = ((Number) otherUnboxed).doubleValue();
             return new PythonObject(MathEvaluator.eval(operator, var1, var2));
-        } else if (object instanceof Float || other.object instanceof Float) {
-            Float var1 = ((Number) object).floatValue();
-            Float var2 = ((Number) other.object).floatValue();
+        } else if (thisUnboxed instanceof Float || otherUnboxed instanceof Float) {
+            Float var1 = ((Number) thisUnboxed).floatValue();
+            Float var2 = ((Number) otherUnboxed).floatValue();
             return new PythonObject(MathEvaluator.eval(operator, var1, var2));
-        } else if (object instanceof Long || other.object instanceof Long) {
-            Long var1 = ((Number) object).longValue();
-            Long var2 = ((Number) other.object).longValue();
+        } else if (thisUnboxed instanceof Long || otherUnboxed instanceof Long) {
+            Long var1 = ((Number) thisUnboxed).longValue();
+            Long var2 = ((Number) otherUnboxed).longValue();
             return new PythonObject(MathEvaluator.eval(operator, var1, var2));
         } else {
-            Integer var1 = ((Number) object).intValue();
-            Integer var2 = ((Number) other.object).intValue();
+            Integer var1 = ((Number) thisUnboxed).intValue();
+            Integer var2 = ((Number) otherUnboxed).intValue();
             return new PythonObject(MathEvaluator.eval(operator, var1, var2));
         }
+    }
+
+    public Object unbox(){
+        return unbox(this);
+    }
+
+    private Object unbox(PythonObject pythonObject){
+        Object unboxed = pythonObject.object;
+        while(unboxed instanceof PythonObject){
+            unboxed = ((PythonObject) unboxed).object;
+        }
+        return unboxed;
     }
 }

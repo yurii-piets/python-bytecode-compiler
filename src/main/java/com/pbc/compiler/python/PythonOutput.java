@@ -4,7 +4,7 @@ public class PythonOutput {
 
     public static void print(PythonObject... args) {
         for (PythonObject arg : args) {
-            System.out.print(arg.getObject());
+            System.out.print(arg.unbox());
         }
     }
 
@@ -15,8 +15,8 @@ public class PythonOutput {
 
     public static void printWithSeparator(PythonObject sep, PythonObject... args) {
         for (PythonObject arg : args) {
-            System.out.print(arg.getObject());
-            System.out.print(sep.getObject());
+            System.out.print(arg.unbox());
+            System.out.print(sep.unbox());
         }
     }
 

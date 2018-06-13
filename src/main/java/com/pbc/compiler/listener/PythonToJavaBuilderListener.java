@@ -13,7 +13,6 @@ import java.util.Set;
 
 import static com.pbc.compiler.listener.StatementContext.CHARACTER_DECLARATION;
 import static com.pbc.compiler.listener.StatementContext.FUNCTION_CALL;
-import static com.pbc.compiler.listener.StatementContext.PRIMITIVE_DECLARATION;
 import static com.pbc.compiler.listener.StatementContext.VARIABLE_DECLARATION;
 
 @RequiredArgsConstructor
@@ -59,7 +58,7 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
                     if (statementContext == CHARACTER_DECLARATION) {
                         String str = startText.replaceAll("'", "\"");
                         builder.append("new ").append(PythonObject.class.getCanonicalName()).append("(").append(str).append(")");
-                    } else if (statementContext == PRIMITIVE_DECLARATION || definedVariables.contains(startText)) {
+                    } else {
                         builder.append("new ").append(PythonObject.class.getCanonicalName()).append("(").append(startText).append(")");
                     }
                     this.statementContext = null;
@@ -89,9 +88,9 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
                 builder.append(".invokeOperator(").append("\"").append(nodeText).append("\"").append(",");
                 this.statementContext = FUNCTION_CALL;
                 break;
-            case ",":
-                builder.append(", ");
-                break;
+//            case ",":
+//                builder.append(", ");
+//                break;
             case "else":
                 builder.append("else");
                 break;
@@ -158,5 +157,39 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
     @Override
     public void enterAugassign(Python3Parser.AugassignContext ctx) {
         builder.append(ctx.getText());
+    }
+
+    @Override
+    public void enterFuncdef(Python3Parser.FuncdefContext ctx) {
+        String text = ctx.getChild(1).getText();
+        builder.append("public ").append(PythonObject.class.getCanonicalName()).append(" ").append(text).append(" ");
+    }
+
+    @Override
+    public void enterParameters(Python3Parser.ParametersContext ctx) {
+        builder.append("(");
+        for(int i = 0; i < ctx.getChild(1).getChildCount(); ++i){
+            if(i % 2 == 0) {
+                builder.append(PythonObject.class.getCanonicalName()).append(" ").append(ctx.getChild(1).getChild(i).getText());
+                if(i + 1 != ctx.getChild(1).getChildCount()){
+                    builder.append(", ");
+                }
+            }
+        }
+    }
+
+    @Override
+    public void exitParameters(Python3Parser.ParametersContext ctx) {
+        builder.append(")");
+    }
+
+    @Override
+    public void enterReturn_stmt(Python3Parser.Return_stmtContext ctx) {
+        builder.append("return ").append("new ").append(PythonObject.class.getCanonicalName()).append("(");
+    }
+
+    @Override
+    public void exitReturn_stmt(Python3Parser.Return_stmtContext ctx) {
+        builder.append(");");
     }
 }

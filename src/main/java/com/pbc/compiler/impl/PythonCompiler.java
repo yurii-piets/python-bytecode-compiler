@@ -37,7 +37,8 @@ public class PythonCompiler implements Compiler {
         Python3Parser pythonParser = new Python3Parser(commonTokenStream);
         StringBuilder builder = new StringBuilder();
         ParseTreeWalker.DEFAULT.walk(new PythonToJavaBuilderListener(builder), pythonParser.file_input());
-        return wrapWithMain(builder.toString(), fileName);
+//        return wrapWithMain(builder.toString(), fileName);
+        return builder.toString();
     }
 
     private void compileToByteCode(String javaCode, String fileName) {
