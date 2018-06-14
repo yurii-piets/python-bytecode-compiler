@@ -66,13 +66,35 @@ public class PythonObject {
         }
     }
 
-    public Object unbox(){
+    public boolean invokeBoolean(String operator, PythonObject other) {
+        Object thisUnboxed = unbox(this);
+        Object otherUnboxed = unbox(other);
+        if (thisUnboxed instanceof Double || otherUnboxed instanceof Double) {
+            Double var1 = ((Number) thisUnboxed).doubleValue();
+            Double var2 = ((Number) otherUnboxed).doubleValue();
+            return BooleanEval.eval(operator, var1, var2);
+        } else if (thisUnboxed instanceof Float || otherUnboxed instanceof Float) {
+            Float var1 = ((Number) thisUnboxed).floatValue();
+            Float var2 = ((Number) otherUnboxed).floatValue();
+            return BooleanEval.eval(operator, var1, var2);
+        } else if (thisUnboxed instanceof Long || otherUnboxed instanceof Long) {
+            Long var1 = ((Number) thisUnboxed).longValue();
+            Long var2 = ((Number) otherUnboxed).longValue();
+            return BooleanEval.eval(operator, var1, var2);
+        } else {
+            Integer var1 = ((Number) thisUnboxed).intValue();
+            Integer var2 = ((Number) otherUnboxed).intValue();
+            return BooleanEval.eval(operator, var1, var2);
+        }
+    }
+
+    public Object unbox() {
         return unbox(this);
     }
 
-    private Object unbox(PythonObject pythonObject){
+    private Object unbox(PythonObject pythonObject) {
         Object unboxed = pythonObject.object;
-        while(unboxed instanceof PythonObject){
+        while (unboxed instanceof PythonObject) {
             unboxed = ((PythonObject) unboxed).object;
         }
         return unboxed;

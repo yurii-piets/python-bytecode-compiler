@@ -34,10 +34,7 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
 
     @Override
     public void enterAtom_expr(Python3Parser.Atom_exprContext ctx) {
-        if (codeWrapper == null) {
-            codeWrapper = CodeWrapper.MAIN;
-            builder.append("\tpublic static void main(String[] args){\n");
-        }
+        startMainWraper();
         String nodeText = ctx.getText();
         String startText = ctx.start.getText();
         switch (startText) {
@@ -83,6 +80,13 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
         }
     }
 
+    private void startMainWraper() {
+        if (codeWrapper == null) {
+            codeWrapper = CodeWrapper.MAIN;
+            builder.append("\tpublic static void main(String[] args){\n");
+        }
+    }
+
     @Override
     public void visitTerminal(TerminalNode node) {
         String nodeText = node.getSymbol().getText();
@@ -119,6 +123,7 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
 
     @Override
     public void enterIf_stmt(Python3Parser.If_stmtContext ctx) {
+        startMainWraper();
         builder.append("if");
     }
 
@@ -129,7 +134,8 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
 
     @Override
     public void enterComp_op(Python3Parser.Comp_opContext ctx) {
-        builder.append(ctx.start.getText());
+        builder.append(".invokeBoolean(").append("\"").append(ctx.start.getText()).append("\"").append(", ");
+        this.statementContext = FUNCTION_CALL;
     }
 
     @Override
