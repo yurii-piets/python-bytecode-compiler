@@ -28,8 +28,14 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
 
     private StatementContext statementContext;
 
+    private CodeWrapper codeWrapper;
+
     @Override
     public void enterAtom_expr(Python3Parser.Atom_exprContext ctx) {
+        if(codeWrapper == null){
+            codeWrapper = CodeWrapper.MAIN;
+            builder.append("\tpublic static void main(String[] args){\n");
+        }
         String nodeText = ctx.getText();
         String startText = ctx.start.getText();
         switch (startText) {
@@ -165,6 +171,12 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
     public void enterFuncdef(Python3Parser.FuncdefContext ctx) {
         String text = ctx.getChild(1).getText();
         builder.append("public ").append(PythonObject.class.getCanonicalName()).append(" ").append(text).append(" ");
+        this.codeWrapper = CodeWrapper.FUNCTION;
+    }
+
+    @Override
+    public void exitFuncdef(Python3Parser.FuncdefContext ctx) {
+        this.codeWrapper = null;
     }
 
     @Override
@@ -202,6 +214,10 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
 
     @Override
     public void exitFile_input(Python3Parser.File_inputContext ctx) {
+        if(codeWrapper == CodeWrapper.MAIN) {
+            builder.append("}\n"); // workaround - need to be refactored
+        }
         builder.append("}\n");
+        codeWrapper = null;
     }
 }
