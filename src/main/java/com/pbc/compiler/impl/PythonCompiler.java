@@ -17,6 +17,8 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+import static com.pbc.compiler.listener.PythonToJavaBuilderListener.FILE_NAME_PATTERN;
+
 public class PythonCompiler implements Compiler {
 
     @Override
@@ -38,7 +40,8 @@ public class PythonCompiler implements Compiler {
         StringBuilder builder = new StringBuilder();
         ParseTreeWalker.DEFAULT.walk(new PythonToJavaBuilderListener(builder), pythonParser.file_input());
 //        return wrapWithMain(builder.toString(), fileName);
-        return builder.toString();
+        return builder.toString()
+                .replace(FILE_NAME_PATTERN, fileName);
     }
 
     private void compileToByteCode(String javaCode, String fileName) {

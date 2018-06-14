@@ -18,6 +18,8 @@ import static com.pbc.compiler.listener.StatementContext.VARIABLE_DECLARATION;
 @RequiredArgsConstructor
 public class PythonToJavaBuilderListener extends Python3BaseListener {
 
+    public final static String FILE_NAME_PATTERN = "%{file_name}%";
+
     private final StringBuilder builder;
 
     private final FunctionMapper functionMapper = new FunctionMapper();
@@ -191,5 +193,15 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
     @Override
     public void exitReturn_stmt(Python3Parser.Return_stmtContext ctx) {
         builder.append(");");
+    }
+
+    @Override
+    public void enterFile_input(Python3Parser.File_inputContext ctx) {
+        builder.append("public class ").append(FILE_NAME_PATTERN).append(" {").append("\n");
+    }
+
+    @Override
+    public void exitFile_input(Python3Parser.File_inputContext ctx) {
+        builder.append("}\n");
     }
 }

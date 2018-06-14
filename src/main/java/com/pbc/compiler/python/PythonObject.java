@@ -47,7 +47,7 @@ public class PythonObject {
     public PythonObject invokeOperator(String operator, PythonObject other) {
         Object thisUnboxed = unbox(this);
         Object otherUnboxed = unbox(other);
-        if (thisUnboxed instanceof Double || other.object instanceof Double) {
+        if (thisUnboxed instanceof Double || otherUnboxed instanceof Double) {
             Double var1 = ((Number) thisUnboxed).doubleValue();
             Double var2 = ((Number) otherUnboxed).doubleValue();
             return new PythonObject(MathEvaluator.eval(operator, var1, var2));
