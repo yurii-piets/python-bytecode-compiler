@@ -30,9 +30,11 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
 
     private CodeWrapper codeWrapper;
 
+    private boolean argumentDefinition;
+
     @Override
     public void enterAtom_expr(Python3Parser.Atom_exprContext ctx) {
-        if(codeWrapper == null){
+        if (codeWrapper == null) {
             codeWrapper = CodeWrapper.MAIN;
             builder.append("\tpublic static void main(String[] args){\n");
         }
@@ -75,7 +77,7 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
                 }
             }
         }
-        if(statementContext == FUNCTION_CALL) {
+        if (statementContext == FUNCTION_CALL) {
             builder.append(")");
             statementContext = null;
         }
@@ -96,9 +98,11 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
                 builder.append(".invokeOperator(").append("\"").append(nodeText).append("\"").append(",");
                 this.statementContext = FUNCTION_CALL;
                 break;
-//            case ",":
-//                builder.append(", ");
-//                break;
+            case ",":
+                if (!argumentDefinition) {
+                    builder.append(", ");
+                }
+                break;
             case "else":
                 builder.append("else");
                 break;
@@ -181,11 +185,12 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
 
     @Override
     public void enterParameters(Python3Parser.ParametersContext ctx) {
+        this.argumentDefinition = true;
         builder.append("(");
-        for(int i = 0; i < ctx.getChild(1).getChildCount(); ++i){
-            if(i % 2 == 0) {
+        for (int i = 0; i < ctx.getChild(1).getChildCount(); ++i) {
+            if (i % 2 == 0) {
                 builder.append(PythonObject.class.getCanonicalName()).append(" ").append(ctx.getChild(1).getChild(i).getText());
-                if(i + 1 != ctx.getChild(1).getChildCount()){
+                if (i + 1 != ctx.getChild(1).getChildCount()) {
                     builder.append(", ");
                 }
             }
@@ -194,6 +199,7 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
 
     @Override
     public void exitParameters(Python3Parser.ParametersContext ctx) {
+        this.argumentDefinition = false;
         builder.append(")");
     }
 
@@ -214,7 +220,7 @@ public class PythonToJavaBuilderListener extends Python3BaseListener {
 
     @Override
     public void exitFile_input(Python3Parser.File_inputContext ctx) {
-        if(codeWrapper == CodeWrapper.MAIN) {
+        if (codeWrapper == CodeWrapper.MAIN) {
             builder.append("}\n"); // workaround - need to be refactored
         }
         builder.append("}\n");
